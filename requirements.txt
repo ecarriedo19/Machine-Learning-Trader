@@ -1,0 +1,9 @@
+pandas
+pandas-ta
+requests
+openai
+python-dotenv
+beautifulsoup4
+lxml
+scikit-learn
+xgboost
