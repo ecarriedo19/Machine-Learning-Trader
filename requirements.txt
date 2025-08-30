@@ -1,5 +1,6 @@
-pandas
-pandas-ta
+pandas==2.2.2
+numpy==1.26.4
+pandas-ta==0.3.14b
 requests
 openai
 python-dotenv
