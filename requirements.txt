@@ -8,3 +8,5 @@ beautifulsoup4
 lxml
 scikit-learn
 xgboost
+streamlit
+setuptools==68.0.0

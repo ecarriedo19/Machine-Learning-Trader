@@ -15,13 +15,14 @@ twelvedata_api_key = os.getenv('TWELVEDATA_API_KEY')
 TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'TSLA', 'AMZN', 'META','VOO']
 DATASET_FILE = 'stock_features.csv'
 LOG_FILE = 'trading_log.txt'
+PREDICTIONS_FILE = 'predictions.csv' # Define filename for predictions
 
 def log_message(message):
     """Writes a message to the log file and prints it."""
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     full_message = f"[{timestamp}] {message}"
     print(full_message)
-    with open(LOG_FILE, 'a') as f:
+    with open(LOG_FILE, 'a', encoding='utf-8') as f: # NEW, CORRECTED LINE
         f.write(full_message + '\n')
 
 # --- PART 1: DATASET CREATION FUNCTIONS ---
@@ -29,7 +30,6 @@ def log_message(message):
 def get_historical_data(ticker, days=1000):
     """Fetches a long history of price data for a single ticker."""
     log_message(f"Fetching {days} days of historical data for {ticker}...")
-    # ... (Code is the same as in create_dataset.py)
     try:
         url = f"https://api.twelvedata.com/time_series?symbol={ticker}&interval=1day&outputsize={days}&apikey={twelvedata_api_key}"
         response = requests.get(url).json()
@@ -43,7 +43,6 @@ def get_historical_data(ticker, days=1000):
 def create_features_and_target(df, future_days=5):
     """Engineers features and the target variable."""
     log_message("  Engineering features and target...")
-    # ... (Code is the same as in create_dataset.py, combined for efficiency)
     df.ta.sma(length=20, append=True); df.ta.sma(length=50, append=True)
     df.ta.rsi(length=14, append=True); df.ta.macd(append=True)
     df.ta.bbands(length=20, append=True); df.ta.atr(length=14, append=True)
@@ -94,17 +93,32 @@ def train_and_predict():
     accuracy = accuracy_score(y_test, predictions)
     log_message(f"Model Evaluation Accuracy on unseen data: {accuracy * 100:.2f}%")
 
-    # --- Make Live Predictions ---
+    # --- Make Live Predictions with Enhanced Formatting ---
     latest_data = df.groupby('ticker').last().reset_index()
     X_latest = latest_data[features]
     probabilities = model.predict_proba(X_latest)[:, 1]
     
-    results_df = pd.DataFrame({'ticker': latest_data['ticker'], 'prediction_confidence': probabilities})
-    results_df['signal'] = results_df['prediction_confidence'].apply(lambda p: 'UP' if p > 0.5 else 'DOWN')
-    results_df = results_df.sort_values(by='prediction_confidence', ascending=False).reset_index(drop=True)
+    results_df = pd.DataFrame({
+        'Ticker': latest_data['ticker'],
+        'Confidence': probabilities
+    })
+    
+    # Determine the Forecast with emojis
+    results_df['Forecast'] = results_df['Confidence'].apply(lambda p: 'UP ⬆️' if p > 0.5 else 'DOWN ⬇️')
+
+    # Format Confidence as a percentage for display
+    results_df['Confidence'] = (results_df['Confidence'] * 100).map('{:.2f}%'.format)
+
+    # Sort by the raw probability before formatting and then drop the helper column
+    results_df['prob_sort'] = probabilities
+    results_df = results_df.sort_values(by='prob_sort', ascending=False).drop(columns=['prob_sort'])
     
     log_message("--- Model Predictions for the Next 5 Trading Days ---")
-    log_message("\n" + results_df.to_string())
+    log_message("\n" + results_df.to_string(index=False))
+
+    # --- Save Predictions for Dashboard ---
+    results_df.to_csv(PREDICTIONS_FILE, index=False)
+    log_message(f"Predictions saved to {PREDICTIONS_FILE}")
 
 # --- MAIN ORCHESTRATOR ---
 def main():
