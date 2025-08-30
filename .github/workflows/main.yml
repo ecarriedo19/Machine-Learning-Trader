@@ -7,6 +7,9 @@ on:
 
 jobs:
   build-and-run:
+    # ADD THESE TWO LINES TO GRANT WRITE PERMISSIONS
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
