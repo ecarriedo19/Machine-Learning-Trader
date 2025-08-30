@@ -10,3 +10,6 @@ scikit-learn
 xgboost
 streamlit
 setuptools==68.0.0
+finnhub-python
+backtesting
+bokeh
