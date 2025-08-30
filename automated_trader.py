@@ -12,7 +12,7 @@ from datetime import datetime
 # --- CONFIGURATION & SETUP ---
 load_dotenv()
 twelvedata_api_key = os.getenv('TWELVEDATA_API_KEY')
-TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'TSLA', 'AMZN', 'META']
+TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'TSLA', 'AMZN', 'META','VOO']
 DATASET_FILE = 'stock_features.csv'
 LOG_FILE = 'trading_log.txt'
 
