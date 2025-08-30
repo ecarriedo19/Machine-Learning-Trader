@@ -1,0 +1,37 @@
+name: Weekly AI Trader Run
+
+on:
+  workflow_dispatch: # Allows you to run it manually from the Actions tab
+  schedule:
+    - cron: '0 8 * * 0' # Runs at 8:00 AM UTC every Sunday
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run the AI Trader Script
+        env: # This securely passes your secrets to the script
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python automated_trader.py
+
+      - name: Commit Results
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add stock_features.csv trading_log.txt
+          # The following line will only commit if there are changes
+          git commit -m "Automated weekly data and log update" || echo "No changes to commit"
+          git push
